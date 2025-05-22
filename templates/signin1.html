@@ -1,0 +1,98 @@
+<div id="loginModal" style="
+    background-color: white;
+    width: 35%;
+    text-align: center;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;">
+
+  <button class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 24px; background: none; border: none; cursor: pointer; padding: 6px; line-height: 1;">&times;</button>
+
+  <div style="text-align: center; margin-bottom: 25px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg" alt="X logo" style="width: 36px;">
+    <h2 style="font-size: 24px; font-weight: bold; margin-top: 15px;">Sign in to X</h2>
+  </div>
+
+  <!-- Google Login Button -->
+  <button style="
+   width: 80%;
+   padding: 10px;
+   margin-bottom: 10px;
+   border-radius: 9999px;
+   border: 1px solid #ccc;
+   background: white;
+   font-weight: bold;
+   cursor: pointer;"> 
+   <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="height: 18px; vertical-align: middle; margin-right: 8px;">
+   Sign in with Google 
+  </button>
+
+  <!-- Apple Login Button -->
+  <button style="
+   width: 80%;
+   padding: 10px;
+   margin-bottom: 10px;
+   border-radius: 9999px;
+   border: 1px solid #ccc;
+   background: white;
+   font-weight: bold;
+   cursor: pointer;"> 
+   <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" style="height: 18px; vertical-align: middle; margin-right: 8px;">
+   Sign in with Apple 
+  </button>
+
+  <!-- OR Divider -->
+  <div style="text-align: center; margin: 5px 0; color: #aaa;">OR</div>
+
+  <!-- Login Form -->
+  <div>
+    <input type="text" id="identifierInput" name="username" placeholder="Phone, email, or username" required style="
+      width: 80%;
+      padding: 12px;
+      margin-bottom: 25px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    ">
+
+    <button type="button" style="
+      width: 80%;
+      background-color: #000000;
+      color: white;
+      padding: 12px;
+      font-weight: bold;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 16px;
+    " onclick="checkIdentifier()">Next</button>
+  </div>
+  
+  <div style="margin-top: 12px; text-align: center;">
+    <button type="button" style="
+      width: 80%;
+      background-color: #ffffff;
+      color: #0f1419;
+      padding: 12px;
+      font-weight: bold;
+      border: 1px solid #cfd9de;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 16px;
+    " onclick="location.href='/forgot-password'">Forgot password?</button>
+  </div>
+  
+  <div style="margin-top: 25px; text-align: center; font-size: 14px;">
+    Don't have an account? <a href="/signup" style="color: #1d9bf0;">Sign up</a>
+  </div>
+  
+  <div id="identifierMessage" style="margin-top:10px; font-size: 14px;"></div>
+  
+</div>
+

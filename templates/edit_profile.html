@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- Navigation bar -->
+    <nav class="bg-white shadow px-6 py-4 flex items-center justify-between">
+        <a href="{{ url_for('home') }}" class="text-xl font-bold text-blue-500 hover:underline">Home</a>
+        <h1 class="text-xl font-semibold">Edit Profile</h1>
+        <div></div>
+    </nav>
+
+    <!-- Main container -->
+    <div class="max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-md p-8">
+        <h2 class="text-2xl font-semibold mb-6 text-center">Edit Your Profile</h2>
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+
+            <!-- Name -->
+            <div>
+                <label class="block text-sm font-medium">Name</label>
+                <input type="text" name="name" value="{{ user[0] }}" required
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Username -->
+            <div>
+                <label class="block text-sm font-medium">Username</label>
+                <input type="text" name="username" value="{{ user[1] }}" required
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-sm font-medium">Email</label>
+                <input type="email" name="email" value="{{ user[2] }}" required
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label class="block text-sm font-medium">Phone</label>
+                <input type="text" name="phone" value="{{ user[3] }}"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+            <!-- Profile Picture -->
+            <div>
+                <label class="block text-sm font-medium mb-1">Profile Picture</label>
+                {% if user[5] %}
+                    <img src="data:image/png;base64,{{ user[5] }}" alt="Profile Picture"
+                        class="w-24 h-24 rounded-full object-cover mb-3 border border-gray-300">
+                {% endif %}
+                <input type="file" name="profile_pic" accept="image/*"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit"
+                    class="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition font-semibold">
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
