@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TwitterClone</title>
+    <title>@{{ username }} - TwitterClone</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -58,18 +58,35 @@
             width: 350px;
             padding: 10px 20px;
         }
-        .tweet-box {
-            background-color: #fff;
+        .profile-header {
             border-bottom: 1px solid #e6ecf0;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            padding: 10px 15px;
+            padding: 15px;
         }
-        .tweet-box textarea {
-            font-size: 20px;
-            line-height: 24px;
-            color: #0f1419;
+        .profile-pic {
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        .follow-btn, .unfollow-btn {
+            font-weight: 600;
+            border-radius: 9999px;
+            padding: 6px 16px;
+            transition: background-color 0.2s;
+        }
+        .follow-btn {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .follow-btn:hover {
+            background-color: #1a91da;
+        }
+        .unfollow-btn {
+            background-color: transparent;
+            border: 1px solid #e0245e;
+            color: #e0245e;
+        }
+        .unfollow-btn:hover {
+            background-color: #fef1f5;
         }
         .tweet, .comment {
             background-color: #fff;
@@ -97,10 +114,6 @@
         }
         .action-btn:hover i.fa-heart {
             color: #e0245e;
-        }
-        .profile-pic {
-            object-fit: cover;
-            border-radius: 50%;
         }
         .comments-section {
             margin-top: 10px;
@@ -174,14 +187,14 @@
             <div class="logo">
                 <i class="fab fa-twitter"></i>
             </div>
-            <div class="nav-item">
+            <a href="{{ url_for('home') }}" class="nav-item">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
-            </div>
-            <a href="{{ url_for('edit_profile') }}" class="nav-item">
+            </a>
+            <div class="nav-item active">
                 <i class="fas fa-user"></i>
                 <span>Profile</span>
-            </a>
+            </div>
             <a href="{{ url_for('logout') }}" class="nav-item">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
@@ -205,71 +218,100 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Tweet Box -->
-            <div class="tweet-box">
-                <form action="{{ url_for('tweet') }}" method="POST">
-                    <div class="flex">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="relative">
+                    <!-- Cover Photo Placeholder -->
+                    <div class="w-full h-48 bg-gray-200"></div>
+                    <!-- Profile Picture -->
+                    <div class="absolute bottom-0 left-4 transform translate-y-1/2">
                         {% if profile_pic_base64 %}
-                            <img src="data:image/jpeg;base64,{{ profile_pic_base64 }}" class="w-12 h-12 profile-pic mr-3" alt="Profile Picture">
+                            <img src="data:image/jpeg;base64,{{ profile_pic_base64 }}" class="w-32 h-32 profile-pic" alt="Profile Picture">
                         {% else %}
-                            <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-                                <i class="fas fa-user text-gray-600"></i>
+                            <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
+                                <i class="fas fa-user text-gray-600 text-4xl"></i>
                             </div>
                         {% endif %}
-                        <textarea name="content" placeholder="What's happening?" maxlength="280" required
-                            class="w-full p-2 border-0 focus:outline-none resize-none placeholder-gray-500"
-                            rows="2"></textarea>
                     </div>
-                    <div class="flex justify-between items-center mt-2">
-                        <span class="text-gray-500 text-sm" id="char-count">280</span>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 font-semibold text-sm">
-                            Tweet
-                        </button>
+                </div>
+                <div class="mt-16 pl-4 flex justify-between items-start">
+                    <div>
+                        <h1 class="text-xl font-bold text-black">{{ name }}</h1>
+                        <p class="text-gray-500 text-sm">@{{ username }}</p>
+                        <p class="text-gray-500 text-sm mt-2">
+                            <i class="far fa-calendar-alt mr-2"></i>
+                            Joined {{ created_at.strftime('%B %Y') }}
+                        </p>
+                        <div class="flex space-x-4 mt-2 text-sm text-gray-900">
+                            <div>
+                                <span class="font-semibold">{{ following_count }}</span> Following
+                            </div>
+                            <div>
+                                <span class="font-semibold follower-count">{{ follower_count }}</span> Followers
+                            </div>
+                        </div>
                     </div>
-                </form>
+                    <div class="mt-2">
+                        {% if user_id == logged_in_user_id %}
+                            <a href="{{ url_for('edit_profile') }}" class="inline-block border border-gray-500 text-black px-4 py-1 rounded-full text-sm font-semibold hover:bg-gray-100">
+                                Edit Profile
+                            </a>
+                        {% else %}
+                            <button id="follow-toggle-btn" class="{% if is_following %}unfollow-btn{% else %}follow-btn{% endif %}" data-user-id="{{ user_id }}">
+                                {{ 'Unfollow' if is_following else 'Follow' }}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
-            <!-- Tweets -->
+            <!-- Timeline -->
             <div id="tweets-container">
-                {% for tweet in tweets %}
-                    <div class="tweet" data-tweet-id="{{ tweet[0] }}">
+                {% for item in timeline %}
+                    <div class="tweet" data-tweet-id="{{ item[0] }}">
                         <div class="flex">
-                            {% if tweet[5] %}
-                                <img src="data:image/jpeg;base64,{{ tweet[5] }}" class="w-12 h-12 profile-pic mr-3" alt="Profile Picture">
+                            {% if item[5] %}
+                                <img src="data:image/jpeg;base64,{{ item[5] }}" class="w-12 h-12 profile-pic mr-3" alt="Profile Picture">
                             {% else %}
                                 <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
                                     <i class="fas fa-user text-gray-600"></i>
                                 </div>
                             {% endif %}
                             <div class="flex-1">
+                                {% if item[11] == 'retweet' %}
+                                    <div class="flex items-center text-gray-500 text-sm mb-1">
+                                        <i class="fas fa-retweet mr-2"></i>
+                                        Retweeted by @{{ username }}
+                                    </div>
+                                {% endif %}
                                 <div class="flex items-center">
-                                    <p class="font-semibold text-sm mr-1">{{ tweet[3] }}</p>
-                                    <p class="text-gray-500 text-sm">@{{ tweet[4] }}</p>
+                                    <p class="font-semibold text-sm mr-1">{{ item[3] }}</p>
+                                    <p class="text-gray-500 text-sm">@{{ item[4] }}</p>
                                     <span class="text-gray-500 text-sm mx-1">·</span>
-                                    <p class="text-gray-500 text-sm">{{ tweet[2].strftime('%b %d') }}</p>
+                                    <p class="text-gray-500 text-sm">{{ item[2].strftime('%b %d') }}</p>
                                 </div>
-                                <p class="text-base mt-1">{{ tweet[1] }}</p>
+                                <p class="text-base mt-1">{{ item[1] }}</p>
                                 <div class="flex mt-3 space-x-8 text-gray-500">
                                     <!-- Comment -->
                                     <div class="flex items-center">
                                         <button type="button" class="action-btn comment-toggle">
                                             <i class="fas fa-comment"></i>
                                         </button>
-                                        <span class="ml-1 text-sm comment-count">{{ tweet[8] }}</span>
+                                        <span class="ml-1 text-sm comment-count">{{ item[8] }}</span>
                                     </div>
                                     <!-- Retweet -->
                                     <div class="flex items-center">
-                                        <button type="button" class="action-btn retweet-btn {% if tweet[10] %}retweeted{% endif %}">
+                                        <button type="button" class="action-btn retweet-btn {% if item[10] %}retweeted{% endif %}">
                                             <i class="fas fa-retweet"></i>
                                         </button>
-                                        <span class="ml-1 text-sm retweet-count">{{ tweet[7] }}</span>
+                                        <span class="ml-1 text-sm retweet-count">{{ item[7] }}</span>
                                     </div>
                                     <!-- Like -->
                                     <div class="flex items-center">
-                                        <button type="button" class="action-btn like-btn {% if tweet[9] %}liked{% endif %}">
-                                            <i class="{% if tweet[9] %}fas{% else %}far{% endif %} fa-heart"></i>
+                                        <button type="button" class="action-btn like-btn {% if item[9] %}liked{% endif %}">
+                                            <i class="{% if item[9] %}fas{% else %}far{% endif %} fa-heart"></i>
                                         </button>
-                                        <span class="ml-1 text-sm like-count">{{ tweet[6] }}</span>
+                                        <span class="ml-1 text-sm like-count">{{ item[6] }}</span>
                                     </div>
                                 </div>
                                 <!-- Comments Section -->
@@ -284,7 +326,7 @@
                                     </form>
                                     <!-- Comments List -->
                                     <div class="comments-list">
-                                        {% for comment in tweet_comments[tweet[0]] %}
+                                        {% for comment in tweet_comments[item[0]] %}
                                             <div class="comment flex">
                                                 {% if comment[4] %}
                                                     <img src="data:image/jpeg;base64,{{ comment[4] }}" class="w-10 h-10 profile-pic mr-2" alt="Profile Picture">
@@ -310,7 +352,7 @@
                         </div>
                     </div>
                 {% else %}
-                    <p class="text-gray-500 p-4">No tweets yet. Start tweeting!</p>
+                    <p class="text-gray-500 p-4">No tweets or retweets yet.</p>
                 {% endfor %}
             </div>
         </div>
@@ -339,14 +381,42 @@
     </div>
 
     <script>
-        // Character count for tweet textarea
-        const textarea = document.querySelector('textarea[name="content"]');
-        const charCount = document.getElementById('char-count');
-        textarea.addEventListener('input', function () {
-            const remaining = 280 - this.value.length;
-            charCount.textContent = remaining;
-            charCount.className = remaining < 0 ? 'text-red-500 text-sm' : 'text-gray-500 text-sm';
-        });
+        // Follow/Unfollow button handling
+        const followToggleBtn = document.getElementById('follow-toggle-btn');
+        if (followToggleBtn) {
+            followToggleBtn.addEventListener('click', async function () {
+                const userId = this.dataset.userId;
+                const isFollowing = this.classList.contains('unfollow-btn');
+                const url = isFollowing ? `/unfollow/${userId}` : `/follow/${userId}`;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        // Update follower count
+                        const followerCountSpan = document.querySelector('.follower-count');
+                        followerCountSpan.textContent = data.follower_count;
+
+                        // Toggle button state
+                        if (isFollowing) {
+                            this.classList.remove('unfollow-btn');
+                            this.classList.add('follow-btn');
+                            this.textContent = 'Follow';
+                        } else {
+                            this.classList.remove('follow-btn');
+                            this.classList.add('unfollow-btn');
+                            this.textContent = 'Unfollow';
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            });
+        }
 
         // Event delegation for tweets container
         const tweetsContainer = document.getElementById('tweets-container');
