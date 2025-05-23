@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, flash, jsonify, ses
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 import base64
+import re
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -15,6 +16,9 @@ mysql = MySQL(app)
 
 @app.route('/')
 def index():
+    if is_logged_in():
+        return redirect(url_for('home'))
+    
     return render_template('index.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -104,10 +108,14 @@ def check_identifier():
 
 @app.route('/signin1', methods=['GET', 'POST'])
 def singIn1():
+    if is_logged_in():
+        return redirect(url_for('home'))
     return render_template('signin1.html')
 
 @app.route('/signin2', methods=['GET', 'POST'])
 def singIn2():
+    if is_logged_in():
+        return redirect(url_for('home'))
     if request.method == 'POST':
         data = request.get_json()
         identifier = data.get('identifier')
@@ -158,7 +166,9 @@ def login():
 def home():
     user_id = session.get('user_id')
     if not user_id:
-        return redirect(url_for('signin1'))
+        flash("Please sign in to view your home feed.", "warning")
+        return redirect(url_for('index'))
+    
 
     try:
         cur = mysql.connection.cursor()
@@ -241,6 +251,26 @@ def tweet():
         # Fetch the OUT parameter
         cur.execute("SELECT @_create_tweet_2")
         tweet_id = cur.fetchone()[0]
+        
+        
+        mentions = re.findall(r'@(\w+)', content)
+        if mentions:
+            format_strings = ','.join(['%s'] * len(mentions))
+            cur.execute(f"SELECT id, username FROM users WHERE username IN ({format_strings})", tuple(mentions))
+            mentioned_users = cur.fetchall()
+
+            for mentioned_user in mentioned_users:
+                mentioned_user_id = mentioned_user[0]
+                # Avoid notifying yourself
+                if mentioned_user_id != user_id:
+                    cur.execute("""
+                        INSERT INTO notifications (user_id, type, from_user_id, tweet_id)
+                        VALUES (%s, 'mention', %s, %s)
+                    """, (mentioned_user_id, user_id, tweet_id))
+                    
+            mysql.connection.commit()
+        
+        
         cur.close()
 
         flash("Tweet posted successfully!", "success")
@@ -462,9 +492,8 @@ def edit_profile():
 @app.route('/profile', defaults={'username': None})
 @app.route('/profile/<username>')
 def profile(username):
-    if 'user_id' in session:
-        logged_in_user_id = session['user_id']  # The logged-in user
-
+    logged_in_user_id = session.get('user_id')  # May be None if not logged in
+    
     cursor = mysql.connection.cursor()
 
     # If no username is provided, get the logged-in user's username
@@ -506,6 +535,7 @@ def profile(username):
             )
         """, (logged_in_user_id, user_id))
         is_following = cursor.fetchone()[0] == 1
+
 
     # Fetch user's tweets
     cursor.execute("""
@@ -659,6 +689,38 @@ def mention_suggestions():
 
     return jsonify(suggestions)
 
+@app.route('/notifications')
+def notifications():
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT n.id, n.type, u.username, u.name, u.profile_pic_base64, n.tweet_id, n.created_at, n.is_read
+        FROM notifications n
+        JOIN users u ON n.from_user_id = u.id
+        WHERE n.user_id = %s
+        ORDER BY n.created_at DESC
+        LIMIT 50
+    """, (user_id,))
+    notifications = cur.fetchall()
+    cur.close()
+
+    return render_template('notifications.html', notifications=notifications)
+
+def format_mentions(content):
+    """Convert @username mentions into clickable links."""
+    def replace_mention(match):
+        username = match.group(1)
+        return f'<a href="/profile/{username}" class="text-blue-500 hover:underline">@{username}</a>'
+    return re.sub(r'@(\w+)', replace_mention, content)
+
+app.jinja_env.filters['format_mentions'] = format_mentions
+
+
+def is_logged_in():
+    return 'user_id' in session
 
 @app.route('/logout')
 def logout():

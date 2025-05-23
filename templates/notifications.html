@@ -1,0 +1,11 @@
+{% for n in notifications %}
+  <div class="p-4 border-b hover:bg-gray-100">
+    {% if n[4] %}
+      <img src="data:image/jpeg;base64,{{ n[4] }}" class="inline w-8 h-8 rounded-full mr-2" width="100px">
+    {% endif %}
+    <span class="font-semibold">@{{ n[2] }}</span>
+    {% if n[1] == 'mention' %} mentioned you in a <a href="/tweet/{{ n[5] }}" class="text-blue-500">tweet</a>.
+    {% endif %}
+    <span class="text-sm text-gray-400 ml-2">{{ n[6].strftime('%b %d %H:%M') }}</span>
+  </div>
+{% endfor %}

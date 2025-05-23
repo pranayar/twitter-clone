@@ -185,6 +185,11 @@
                 <i class="fas fa-user"></i>
                 <span>Profile</span>
             </a>
+             <a href="{{ url_for('notifications') }}" class="nav-item">
+                <i class="far fa-bell"></i> 
+                <span>Notifications</span>
+            </a>
+    
             <a href="{{ url_for('logout') }}" class="nav-item">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
@@ -258,7 +263,7 @@
                                     <span class="text-gray-500 text-sm mx-1">·</span>
                                     <p class="text-gray-500 text-sm">{{ tweet[2].strftime('%b %d') }}</p>
                                 </div>
-                                <p class="text-base mt-1">{{ tweet[1] }}</p>
+                                <p class="text-base mt-1">{{ tweet[1] | format_mentions | safe }}</p>
                                 <div class="flex mt-3 space-x-8 text-gray-500">
                                     <!-- Comment -->
                                     <div class="flex items-center">
