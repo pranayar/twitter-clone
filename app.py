@@ -459,30 +459,36 @@ def edit_profile():
     cur.close()
 
     return render_template('edit_profile.html', user=user)
-
-@app.route('/profile', defaults={'user_id': None})
-@app.route('/profile/<int:user_id>')
-def profile(user_id):
+@app.route('/profile', defaults={'username': None})
+@app.route('/profile/<username>')
+def profile(username):
     if 'user_id' in session:
         logged_in_user_id = session['user_id']  # The logged-in user
 
-    # If no user_id is provided, show the logged-in user's profile
-    if user_id is None:
-        user_id = logged_in_user_id
-
-    # Fetch user details
     cursor = mysql.connection.cursor()
+
+    # If no username is provided, get the logged-in user's username
+    if username is None:
+        cursor.execute("SELECT username FROM users WHERE id = %s", (logged_in_user_id,))
+        result = cursor.fetchone()
+        if result:
+            username = result[0]
+        else:
+            flash('User not found.', 'error')
+            return redirect(url_for('home'))
+
+    # Fetch user details using username
     cursor.execute("""
-        SELECT name, username, profile_pic_base64, created_at 
+        SELECT id, name, username, profile_pic_base64, created_at 
         FROM users 
-        WHERE id = %s
-    """, (user_id,))
+        WHERE username = %s
+    """, (username,))
     user = cursor.fetchone()
     if not user:
         flash('User not found.', 'error')
         return redirect(url_for('home'))
 
-    name, username, profile_pic_base64, created_at = user
+    user_id, name, username, profile_pic_base64, created_at = user
 
     # Fetch follower and following counts
     cursor.execute("SELECT COUNT(*) FROM followers WHERE following_id = %s", (user_id,))
@@ -538,7 +544,7 @@ def profile(user_id):
     """, (logged_in_user_id, logged_in_user_id, user_id))
     user_retweets = cursor.fetchall()
 
-    # Combine tweets and retweets, sort by created_at
+    # Combine and sort timeline
     timeline = list(user_tweets) + list(user_retweets)
     timeline.sort(key=lambda x: x[2], reverse=True)
 
@@ -579,6 +585,7 @@ def profile(user_id):
                          user_id=user_id,
                          logged_in_user_id=logged_in_user_id)
 
+
 @app.route('/follow/<int:user_id>', methods=['POST'])
 def follow(user_id):
     if 'user_id' in session:
@@ -608,11 +615,9 @@ def follow(user_id):
 
 @app.route('/unfollow/<int:user_id>', methods=['POST'])
 def unfollow(user_id):
-    if 'user_id' not in session:
+    if 'user_id' in session:
         logged_in_user_id = session['user_id']  # The logged-in user
     
-    if logged_in_user_id == user_id:
-        return jsonify({"success": False, "message": "You cannot unfollow yourself."})
 
     cursor = mysql.connection.cursor()
     try:
@@ -632,6 +637,28 @@ def unfollow(user_id):
         return jsonify({"success": False, "message": "Error unfollowing user."})
     finally:
         cursor.close()
+        
+@app.route('/mention-suggestions')
+def mention_suggestions():
+    query = request.args.get('q', '')
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT name, username, profile_pic_base64 
+        FROM users 
+        WHERE username LIKE %s 
+        LIMIT 10
+    """, (query + '%',))
+    results = cursor.fetchall()
+    cursor.close()
+
+    suggestions = [{
+        'name': row[0],
+        'username': row[1],
+        'profile_pic_base64': row[2]
+    } for row in results]
+
+    return jsonify(suggestions)
+
 
 @app.route('/logout')
 def logout():
