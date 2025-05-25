@@ -709,6 +709,58 @@ def notifications():
 
     return render_template('notifications.html', notifications=notifications)
 
+@app.route('/mark-notification-read/<int:notification_id>', methods=['POST'])
+def mark_notification_read(notification_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
+    user_id = session['user_id']
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE notifications 
+            SET is_read = TRUE 
+            WHERE id = %s AND user_id = %s
+        """, (notification_id, user_id))
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+@app.route('/tweet/<int:tweet_id>')
+def view_tweet(tweet_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+
+    user_id = session['user_id']
+    cursor = mysql.connection.cursor()
+
+    cursor.execute("""
+        SELECT t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64
+        FROM tweets t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.id = %s
+    """, (tweet_id,))
+    tweet = cursor.fetchone()
+
+    if not tweet:
+        cursor.close()
+        return "Tweet not found", 404
+
+    cursor.execute("""
+        SELECT c.content, c.created_at, u.name, u.username, u.profile_pic_base64
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.tweet_id = %s
+        ORDER BY c.created_at DESC
+    """, (tweet_id,))
+    comments = cursor.fetchall()
+    cursor.close()
+
+    return render_template('view_tweet.html', tweet=tweet, comments=comments)
+
+
 def format_mentions(content):
     """Convert @username mentions into clickable links."""
     def replace_mention(match):

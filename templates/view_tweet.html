@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet - TwitterClone</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .sidebar {
+            width: 275px;
+            padding: 10px 20px;
+            position: fixed;
+            height: 100vh;
+            border-right: 1px solid #e6ecf0;
+        }
+        .sidebar .logo {
+            color: #1da1f2;
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+        .sidebar .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            font-size: 19px;
+            font-weight: 500;
+            color: #0f1419;
+            border-radius: 9999px;
+            margin-bottom: 5px;
+        }
+        .sidebar .nav-item:hover {
+            background-color: #e8f5fe;
+            color: #1da1f2;
+        }
+        .sidebar .nav-item i {
+            margin-right: 15px;
+            font-size: 24px;
+        }
+        .main-content {
+            margin-left: 275px;
+            width: 600px;
+            border-right: 1px solid #e6ecf0;
+        }
+        .right-sidebar {
+            width: 350px;
+            padding: 10px 20px;
+        }
+        .tweet {
+            background-color: #fff;
+            border-bottom: 1px solid #e6ecf0;
+            padding: 10px 15px;
+        }
+        .profile-pic {
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .comment {
+            padding: 8px 0;
+            border-bottom: 1px solid #e6ecf0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fab fa-twitter"></i>
+            </div>
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+            <a href="{{ url_for('notifications') }}" class="nav-item">
+                <i class="far fa-bell"></i>
+                <span>Notifications</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="border-b px-4 py-3 font-bold text-lg">Tweet</div>
+            
+            <!-- Tweet -->
+            <div class="tweet">
+                <div class="flex">
+                    {% if tweet[5] %}
+                        <img src="data:image/jpeg;base64,{{ tweet[5] }}" class="w-12 h-12 profile-pic mr-3" alt="Profile Picture">
+                    {% else %}
+                        <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <p class="font-semibold text-sm mr-1">{{ tweet[3] }}</p>
+                            <p class="text-gray-500 text-sm">@{{ tweet[4] }}</p>
+                            <span class="text-gray-500 text-sm mx-1">·</span>
+                            <p class="text-gray-500 text-sm">{{ tweet[2].strftime('%b %d, %Y') }}</p>
+                        </div>
+                        <p class="text-base mt-1">{{ tweet[1] | format_mentions | safe }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="p-4">
+                <h2 class="font-semibold text-lg mb-4">Comments</h2>
+                
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="comment flex">
+                            {% if comment[4] %}
+                                <img src="data:image/jpeg;base64,{{ comment[4] }}" class="w-10 h-10 profile-pic mr-2" alt="Profile Picture">
+                            {% else %}
+                                <div class="w-10 h-10 rounded-full bg-gray-200 mr-2 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-600 text-sm"></i>
+                                </div>
+                            {% endif %}
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <p class="font-semibold text-sm mr-1">{{ comment[2] }}</p>
+                                    <p class="text-gray-500 text-sm">@{{ comment[3] }}</p>
+                                    <span class="text-gray-500 text-sm mx-1">·</span>
+                                    <p class="text-gray-500 text-sm">{{ comment[1].strftime('%b %d, %Y') }}</p>
+                                </div>
+                                <p class="text-sm">{{ comment[0] }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500">No comments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="right-sidebar">
+            <div class="trends bg-gray-50 rounded-lg p-4">
+                <h3 class="font-bold text-lg mb-4">Trends for you</h3>
+                <div class="trend-item mb-4">
+                    <p class="text-sm text-gray-500">Trending in Tech</p>
+                    <p class="font-semibold">#AIRevolution</p>
+                    <p class="text-sm text-gray-400">12K Tweets</p>
+                </div>
+                <div class="trend-item mb-4">
+                    <p class="text-sm text-gray-500">Trending in Space</p>
+                    <p class="font-semibold">#MarsMission</p>
+                    <p class="text-sm text-gray-400">8K Tweets</p>
+                </div>
+                <div class="trend-item">
+                    <p class="text-sm text-gray-500">Trending in Science</p>
+                    <p class="font-semibold">#QuantumComputing</p>
+                    <p class="text-sm text-gray-400">5K Tweets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
