@@ -11,11 +11,13 @@
                 <i class="fas fa-user"></i>
                 <span>Profile</span>
             </a>
-             <a href="{{ url_for('notifications') }}" class="nav-item">
-                <i class="far fa-bell"></i> 
-                <span>Notifications</span>
-            </a>
-    
+              <a href="{{ url_for('notifications') }}" class="nav-item">
+        <i class="far fa-bell"></i> 
+        <span>Notifications</span>
+        {% if unread_count > 0 %}
+            <span class="notification-badge" style="background-color: #1da1f2; color: white; border-radius: 9999px; padding: 2px 8px; font-size: 12px; margin-left: 8px;">{{ unread_count }}</span>
+        {% endif %}
+    </a>
             <a href="{{ url_for('logout') }}" class="nav-item">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>

@@ -14,6 +14,21 @@ app.config['MYSQL_PASSWORD'] = 'abcd6658'
 app.config['MYSQL_DB'] = 'twitter_clone'
 mysql = MySQL(app)
 
+def get_unread_notification_count(user_id):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM notifications 
+            WHERE user_id = %s AND is_read = FALSE
+        """, (user_id,))
+        count = cur.fetchone()[0]
+        cur.close()
+        return count
+    except Exception as e:
+        print(f"Error fetching unread notification count: {str(e)}")
+        return 0
+
 @app.route('/')
 def index():
     if is_logged_in():
@@ -168,7 +183,6 @@ def home():
     if not user_id:
         flash("Please sign in to view your home feed.", "warning")
         return redirect(url_for('index'))
-    
 
     try:
         cur = mysql.connection.cursor()
@@ -205,6 +219,9 @@ def home():
             comments = cur.fetchall()
             tweet_comments[tweet_id] = comments
 
+        # Fetch unread notification count
+        unread_count = get_unread_notification_count(user_id)
+
         cur.close()
 
         if user:
@@ -216,7 +233,8 @@ def home():
                 email=email,
                 profile_pic_base64=profile_pic_base64,
                 tweets=tweets,
-                tweet_comments=tweet_comments
+                tweet_comments=tweet_comments,
+                unread_count=unread_count
             )
         else:
             flash("User not found.", "danger")
@@ -252,7 +270,6 @@ def tweet():
         cur.execute("SELECT @_create_tweet_2")
         tweet_id = cur.fetchone()[0]
         
-        
         mentions = re.findall(r'@(\w+)', content)
         if mentions:
             format_strings = ','.join(['%s'] * len(mentions))
@@ -269,7 +286,6 @@ def tweet():
                     """, (mentioned_user_id, user_id, tweet_id))
                     
             mysql.connection.commit()
-        
         
         cur.close()
 
@@ -489,11 +505,11 @@ def edit_profile():
     cur.close()
 
     return render_template('edit_profile.html', user=user)
+
 @app.route('/profile', defaults={'username': None})
 @app.route('/profile/<username>')
 def profile(username):
-    logged_in_user_id = session.get('user_id')  # May be None if not logged in
-    
+    logged_in_user_id = session.get('user_id')
     cursor = mysql.connection.cursor()
 
     # If no username is provided, get the logged-in user's username
@@ -527,7 +543,7 @@ def profile(username):
 
     # Check if the logged-in user is following this user
     is_following = False
-    if user_id != logged_in_user_id:  # Only check if viewing someone else's profile
+    if user_id != logged_in_user_id:
         cursor.execute("""
             SELECT EXISTS(
                 SELECT 1 FROM followers 
@@ -535,7 +551,6 @@ def profile(username):
             )
         """, (logged_in_user_id, user_id))
         is_following = cursor.fetchone()[0] == 1
-
 
     # Fetch user's tweets
     cursor.execute("""
@@ -581,7 +596,7 @@ def profile(username):
     # Process timeline data
     timeline_data = []
     for item in timeline:
-        profile_pic = item[5]  # Already in base64 format
+        profile_pic = item[5]
         timeline_data.append(item[:5] + (profile_pic,) + item[6:])
 
     # Fetch comments for each tweet/retweet in the timeline
@@ -601,6 +616,9 @@ def profile(username):
             for comment in comments
         ]
 
+    # Fetch unread notification count
+    unread_count = get_unread_notification_count(logged_in_user_id)
+
     cursor.close()
     return render_template('profile.html', 
                          name=name, 
@@ -613,16 +631,17 @@ def profile(username):
                          following_count=following_count,
                          is_following=is_following,
                          user_id=user_id,
-                         logged_in_user_id=logged_in_user_id)
-
+                         logged_in_user_id=logged_in_user_id,
+                         unread_count=unread_count)
 
 @app.route('/follow/<int:user_id>', methods=['POST'])
 def follow(user_id):
-    if 'user_id' in session:
-        logged_in_user_id = session['user_id']  # The logged-in user
-    
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Please log in to follow."}), 401
+
+    logged_in_user_id = session['user_id']
     if logged_in_user_id == user_id:
-        return jsonify({"success": False, "message": "You cannot follow yourself."})
+        return jsonify({"success": False, "message": "You cannot follow yourself."}), 400
 
     cursor = mysql.connection.cursor()
     try:
@@ -639,16 +658,16 @@ def follow(user_id):
         return jsonify({"success": True, "follower_count": follower_count})
     except mysql.connection.Error as err:
         mysql.connection.rollback()
-        return jsonify({"success": False, "message": "You are already following this user."})
+        return jsonify({"success": False, "message": "You are already following this user."}), 400
     finally:
         cursor.close()
 
 @app.route('/unfollow/<int:user_id>', methods=['POST'])
 def unfollow(user_id):
-    if 'user_id' in session:
-        logged_in_user_id = session['user_id']  # The logged-in user
-    
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Please log in to unfollow."}), 401
 
+    logged_in_user_id = session['user_id']
     cursor = mysql.connection.cursor()
     try:
         cursor.execute("""
@@ -664,7 +683,7 @@ def unfollow(user_id):
         return jsonify({"success": True, "follower_count": follower_count})
     except mysql.connection.Error as err:
         mysql.connection.rollback()
-        return jsonify({"success": False, "message": "Error unfollowing user."})
+        return jsonify({"success": False, "message": "Error unfollowing user."}), 400
     finally:
         cursor.close()
         
@@ -696,6 +715,12 @@ def notifications():
 
     user_id = session['user_id']
     cur = mysql.connection.cursor()
+
+    # Fetch user details
+    cur.execute("SELECT name, username, profile_pic_base64 FROM users WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+
+    # Fetch notifications
     cur.execute("""
         SELECT n.id, n.type, u.username, u.name, u.profile_pic_base64, n.tweet_id, n.created_at, n.is_read
         FROM notifications n
@@ -705,9 +730,25 @@ def notifications():
         LIMIT 50
     """, (user_id,))
     notifications = cur.fetchall()
+
+    # Fetch unread notification count
+    unread_count = get_unread_notification_count(user_id)
+
     cur.close()
 
-    return render_template('notifications.html', notifications=notifications)
+    if user:
+        name, username, profile_pic_base64 = user
+        return render_template(
+            'notifications.html',
+            notifications=notifications,
+            name=name,
+            username=username,
+            profile_pic_base64=profile_pic_base64,
+            unread_count=unread_count
+        )
+    else:
+        flash("User not found.", "danger")
+        return redirect(url_for('index'))
 
 @app.route('/mark-notification-read/<int:notification_id>', methods=['POST'])
 def mark_notification_read(notification_id):
@@ -728,6 +769,7 @@ def mark_notification_read(notification_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/tweet/<int:tweet_id>')
 def view_tweet(tweet_id):
     if 'user_id' not in session:
@@ -735,6 +777,10 @@ def view_tweet(tweet_id):
 
     user_id = session['user_id']
     cursor = mysql.connection.cursor()
+
+    # Fetch user details
+    cursor.execute("SELECT name, username, profile_pic_base64 FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
 
     cursor.execute("""
         SELECT t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64
@@ -756,10 +802,26 @@ def view_tweet(tweet_id):
         ORDER BY c.created_at DESC
     """, (tweet_id,))
     comments = cursor.fetchall()
+
+    # Fetch unread notification count
+    unread_count = get_unread_notification_count(user_id)
+
     cursor.close()
 
-    return render_template('view_tweet.html', tweet=tweet, comments=comments)
-
+    if user:
+        name, username, profile_pic_base64 = user
+        return render_template(
+            'view_tweet.html',
+            tweet=tweet,
+            comments=comments,
+            name=name,
+            username=username,
+            profile_pic_base64=profile_pic_base64,
+            unread_count=unread_count
+        )
+    else:
+        flash("User not found.", "danger")
+        return redirect(url_for('index'))
 
 def format_mentions(content):
     """Convert @username mentions into clickable links."""
@@ -769,7 +831,6 @@ def format_mentions(content):
     return re.sub(r'@(\w+)', replace_mention, content)
 
 app.jinja_env.filters['format_mentions'] = format_mentions
-
 
 def is_logged_in():
     return 'user_id' in session
