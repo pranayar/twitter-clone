@@ -344,10 +344,11 @@ async function checkIdentifier() {
     console.error('Error:', error);
   }
 }
+
 function hideShowPass() {
-     const togglePassword = document.getElementById('togglePassword');
+  
+  const togglePassword = document.getElementById('togglePassword');
   const password = document.getElementById('password');
-  const loginButton = document.getElementById('loginButton');
   const eyeIcon = togglePassword.querySelector('svg');
   
   // Twitter/X's eye icon paths
@@ -362,15 +363,13 @@ function hideShowPass() {
     <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   `;
 
-  if (togglePassword) {
-    togglePassword.addEventListener('click', function() {
-      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+ const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
       password.setAttribute('type', type);
       
       // Toggle between eye open and closed SVG
       eyeIcon.innerHTML = type === 'password' ? eyeOpenPath : eyeClosedPath;
-    });
-  }
+   
+ 
 
 }
 async function handleLogin() {

@@ -169,6 +169,37 @@
                 display: none;
             }
         }
+
+           .circle-progress {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: conic-gradient(#1da1f2 0%, #e6ecf0 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .circle-progress-inner {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .warning {
+            color: #ffad1f;
+        }
+        
+        .danger {
+            color: #e0245e;
+        }
     </style>
 </head>
 <body>
@@ -195,7 +226,11 @@
                             rows="2"></textarea>
                     </div>
                     <div class="flex justify-between items-center mt-2">
-                        <span class="text-gray-500 text-sm" id="char-count">280</span>
+
+                         <div class="circle-progress" id="char-progress">
+                            <div class="circle-progress-inner" id="char-count"></div>
+                        </div>
+                        <!-- <span class="text-gray-500 text-sm" id="char-count">280</span> -->
                         <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 font-semibold text-sm">
                             Tweet
                         </button>
@@ -320,13 +355,31 @@
     </div>
 
     <script>
-        // Character count for tweet textarea
+        // Character count for tweet textarea - updated with circle progress
         const textarea = document.querySelector('textarea[name="content"]');
         const charCount = document.getElementById('char-count');
+        const charProgress = document.getElementById('char-progress');
+        
         textarea.addEventListener('input', function () {
             const remaining = 280 - this.value.length;
-            charCount.textContent = remaining;
-            charCount.className = remaining < 0 ? 'text-red-500 text-sm' : 'text-gray-500 text-sm';
+            const percentage = (this.value.length / 280) * 100;
+            
+            // Update the circle progress
+            charProgress.style.background = `conic-gradient(#1da1f2 ${percentage}%, #e6ecf0 ${percentage}%)`;
+            
+            // Update the count
+            // charCount.textContent = remaining;
+            
+            // Change colors based on remaining characters
+            if (remaining < 20) {
+                charCount.classList.add('warning');
+                charCount.classList.remove('danger');
+            } else if (remaining < 0) {
+                charCount.classList.remove('warning');
+                charCount.classList.add('danger');
+            } else {
+                charCount.classList.remove('warning', 'danger');
+            }
         });
 
         // Event delegation for tweets container

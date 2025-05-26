@@ -194,7 +194,7 @@
             <div class="profile-header">
                 <div class="relative">
                     <!-- Cover Photo Placeholder -->
-                    <div class="w-full h-48 bg-gray-200"></div>
+                    <div class="w-full h-40 bg-gray-200"></div>
                     <!-- Profile Picture -->
                     <div class="absolute bottom-0 left-4 transform translate-y-1/2">
                         {% if profile_pic_base64 %}
@@ -208,11 +208,34 @@
                 </div>
                 <div class="mt-16 pl-4 flex justify-between items-start">
                     <div>
-                        <h1 class="text-xl font-bold text-black">{{ name }}</h1>
-                        <p class="text-gray-500 text-sm">@{{ username }}</p>
+                        <!-- <h1 class="text-xl font-bold text-black">{{ name }}</h1>
+                        <p class="text-gray-500 text-sm">@{{ username }}</p> -->
+                        <div class="flex items-center space-x-2">
+  <h1 class="text-xl font-bold text-black">{{ name }}</h1>
+
+  {% if not is_verified and user_id == logged_in_user_id %}
+    <button id="verifyBtn" class="flex items-center space-x-1 text-sm font-bold text-black border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-50">
+  <span class="bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">✓</span>
+  <span>Get verified</span>
+</button>
+
+  {% elif is_verified %}
+    <span class="bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">✓</span>
+  {% endif %}
+
+  
+</div>
+
+
+<p class="text-gray-500 text-sm">@{{ username }}</p>
+ 
+
+
+
+                        <p class="text-black text-base">{{ bio }}</p>
                         <p class="text-gray-500 text-sm mt-2">
-                            <i class="far fa-calendar-alt mr-2"></i>
-                            Joined {{ created_at.strftime('%B %Y') }}
+                        <i class="fa-duotone fa-solid fa-location-dot"></i> {{ location }}&nbsp
+                            <i class="far fa-calendar-alt mr-2"></i>Joined {{ created_at.strftime('%B %Y') }}
                         </p>
                         <div class="flex space-x-4 mt-2 text-sm text-gray-900">
                             <div>
@@ -353,6 +376,27 @@
     </div>
 
     <script>
+  
+
+document.getElementById('verifyBtn').addEventListener('click', () => {
+    fetch('/verify', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Important if session is cookie-based
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || "Verification complete!");
+        // Optionally update UI here, e.g. change button text
+    })
+    .catch(error => {
+        console.error('Verification failed:', error);
+        alert('An error occurred while verifying.');
+    });
+});
+
         // Follow/Unfollow button handling
         const followToggleBtn = document.getElementById('follow-toggle-btn');
         if (followToggleBtn) {

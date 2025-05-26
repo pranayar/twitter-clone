@@ -4,68 +4,109 @@
     <meta charset="UTF-8">
     <title>Edit Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-900">
+    <style>
+        input[type="file"] {
+            display: none;
+        }
 
-    <!-- Navigation bar -->
-    <nav class="bg-white shadow px-6 py-4 flex items-center justify-between">
-        <a href="{{ url_for('home') }}" class="text-xl font-bold text-blue-500 hover:underline">Home</a>
-        <h1 class="text-xl font-semibold">Edit Profile</h1>
-        <div></div>
-    </nav>
+        .backdrop-blur-md::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen text-gray-900 font-sans">
+
+    <!-- Header bar -->
+    <div class="flex items-center px-6 py-4 bg-white shadow-md sticky top-0 z-50">
+        <a href="{{ url_for('home') }}" class="text-blue-500 font-bold text-lg mr-4 hover:underline">&larr;</a>
+        <h1 class="text-2xl font-bold">Edit Profile</h1>
+    </div>
 
     <!-- Main container -->
-    <div class="max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-md p-8">
-        <h2 class="text-2xl font-semibold mb-6 text-center">Edit Your Profile</h2>
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form method="POST" enctype="multipart/form-data" class="max-w-2xl mx-auto mt-6 bg-white/70 shadow-xl rounded-2xl p-6 backdrop-blur-md relative z-10 space-y-6">
+
+        <!-- Banner Section -->
+        <div class="relative h-40 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-xl overflow-hidden">
+            <div class="absolute inset-0 bg-[url('https://source.unsplash.com/featured/?abstract,tech')] bg-cover bg-center opacity-40"></div>
+        </div>
+
+        <!-- Profile Picture -->
+        <div class="relative w-28 h-28 -mt-16 mx-auto">
+            {% if user[5] %}
+                <img src="data:image/png;base64,{{ user[5] }}" alt="Profile Picture"
+                     class="w-28 h-28 rounded-full border-4 border-white object-cover shadow-lg">
+            {% else %}
+                <div class="w-28 h-28 rounded-full border-4 border-white bg-gray-300 shadow-lg"></div>
+            {% endif %}
+            <label for="profile_pic" class="absolute bottom-1 right-1 bg-white rounded-full p-1 shadow cursor-pointer hover:bg-blue-100 transition">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z"/>
+                </svg>
+            </label>
+            <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
+        </div>
+
+        <!-- Profile Form Fields -->
+        <div class="space-y-4">
 
             <!-- Name -->
             <div>
-                <label class="block text-sm font-medium">Name</label>
+                <label class="block text-sm font-semibold mb-1">Name</label>
                 <input type="text" name="name" value="{{ user[0] }}" required
-                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
             <!-- Username -->
             <div>
-                <label class="block text-sm font-medium">Username</label>
+                <label class="block text-sm font-semibold mb-1">Username</label>
                 <input type="text" name="username" value="{{ user[1] }}" required
-                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
             <!-- Email -->
             <div>
-                <label class="block text-sm font-medium">Email</label>
+                <label class="block text-sm font-semibold mb-1">Email</label>
                 <input type="email" name="email" value="{{ user[2] }}" required
-                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
             <!-- Phone -->
             <div>
-                <label class="block text-sm font-medium">Phone</label>
+                <label class="block text-sm font-semibold mb-1">Phone</label>
                 <input type="text" name="phone" value="{{ user[3] }}"
-                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
-            <!-- Profile Picture -->
+            <!-- Location -->
             <div>
-                <label class="block text-sm font-medium mb-1">Profile Picture</label>
-                {% if user[5] %}
-                    <img src="data:image/png;base64,{{ user[5] }}" alt="Profile Picture"
-                        class="w-24 h-24 rounded-full object-cover mb-3 border border-gray-300">
-                {% endif %}
-                <input type="file" name="profile_pic" accept="image/*"
-                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <label class="block text-sm font-semibold mb-1">Location</label>
+                <input type="text" name="location" value="{{ user[6] or '' }}"
+                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
-            <!-- Submit Button -->
-            <div class="text-center">
-                <button type="submit"
-                    class="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition font-semibold">
-                    Update
-                </button>
+            <!-- Bio -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Bio</label>
+                <textarea name="bio" rows="3"
+                          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 transition">{{ user[7] or '' }}</textarea>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="text-right pt-4">
+            <button type="submit"
+                    class="px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow hover:opacity-90 transition">
+                Save Changes
+            </button>
+        </div>
+    </form>
+
 </body>
 </html>

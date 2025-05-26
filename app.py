@@ -479,6 +479,9 @@ def edit_profile():
             username = request.form['username']
             email = request.form['email']
             phone = request.form['phone']
+            location = request.form.get('location')
+            bio = request.form.get('bio')
+
             
             # Handle profile picture (optional)
             profile_pic = request.files.get('profile_pic')
@@ -489,7 +492,7 @@ def edit_profile():
                 cur.execute("SELECT profile_pic_base64 FROM users WHERE id = %s", (user_id,))
                 profile_pic_base64 = cur.fetchone()[0]
 
-            args = [user_id, name, username, email, phone, profile_pic_base64]
+            args = [user_id, name, username, email, phone, profile_pic_base64,location,bio]
             cur.callproc('update_user_profile', args)
             mysql.connection.commit()
             flash("Profile updated successfully!", "success")
@@ -500,7 +503,7 @@ def edit_profile():
             return redirect(url_for('edit_profile'))
 
     # GET request: Fetch current user details
-    cur.execute("SELECT name, username, email, phone, dob, profile_pic_base64 FROM users WHERE id = %s", (user_id,))
+    cur.execute("SELECT name, username, email, phone, dob, profile_pic_base64,location,bio FROM users WHERE id = %s", (user_id,))
     user = cur.fetchone()
     cur.close()
 
@@ -524,7 +527,7 @@ def profile(username):
 
     # Fetch user details using username
     cursor.execute("""
-        SELECT id, name, username, profile_pic_base64, created_at 
+        SELECT id, name, bio,location,username, profile_pic_base64, created_at,isVerified 
         FROM users 
         WHERE username = %s
     """, (username,))
@@ -533,7 +536,7 @@ def profile(username):
         flash('User not found.', 'error')
         return redirect(url_for('home'))
 
-    user_id, name, username, profile_pic_base64, created_at = user
+    user_id, name, bio,location,username, profile_pic_base64, created_at,isVerified = user
 
     # Fetch follower and following counts
     cursor.execute("SELECT COUNT(*) FROM followers WHERE following_id = %s", (user_id,))
@@ -625,6 +628,9 @@ def profile(username):
                          username=username, 
                          profile_pic_base64=profile_pic_base64, 
                          created_at=created_at,
+                         bio=bio,
+                         location=location,
+                         is_verified=isVerified,
                          timeline=timeline_data, 
                          tweet_comments=tweet_comments,
                          follower_count=follower_count,
@@ -834,6 +840,21 @@ app.jinja_env.filters['format_mentions'] = format_mentions
 
 def is_logged_in():
     return 'user_id' in session
+
+@app.route('/verify', methods=['POST'])
+def verify():
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+
+    cursor = mysql.connection.cursor()
+    query = "UPDATE users SET isVerified = 1 WHERE id = %s"
+    cursor.execute(query, (user_id,))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({"message": "User verified successfully"})
 
 @app.route('/logout')
 def logout():
