@@ -88,7 +88,7 @@ def signup():
             # Handle duplicate email error from SIGNAL in procedure
             if err.args[0] == 1644:  # MySQL SIGNAL error code for user-defined exception
                 print("Email already registered error:", err.args[1])
-                return render_template('signup/signup1.html', error="Email already registered")
+                return render_template('/signup1.html', error="Email already registered")
             else:
                 print("Database error during signup:", err)
                 return redirect(url_for('signup'))
@@ -96,7 +96,7 @@ def signup():
             print("Exception during signup:", e)
             return redirect(url_for('signup'))
 
-    return render_template('signup/signup1.html')
+    return render_template('/signup1.html')
 
 @app.route('/check-identifier', methods=['POST'])
 def check_identifier():
