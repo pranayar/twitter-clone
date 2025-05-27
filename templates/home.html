@@ -287,6 +287,12 @@
                                         </button>
                                         <span class="ml-1 text-sm like-count">{{ tweet[6] }}</span>
                                     </div>
+                                        <!-- Bookmark -->
+<div class="flex items-center">
+    <button type="button" class="action-btn bookmark-btn {% if tweet[11] %}text-yellow-500{% endif %}">
+        <i class="{% if tweet[11] %}fas{% else %}far{% endif %} fa-bookmark"></i>
+    </button>
+</div>
                                 </div>
                                 <!-- Comments Section -->
                                 <div class="comments-section hidden">
@@ -422,6 +428,25 @@
                 }
             }
            
+            // Toggle bookmark
+if (target.classList.contains('bookmark-btn')) {
+    const isBookmarked = target.classList.contains('text-yellow-500');
+    const url = isBookmarked ? `/unbookmark/${tweetId}` : `/bookmark/${tweetId}`;
+    try {
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            target.classList.toggle('text-yellow-500');
+            const icon = target.querySelector('i');
+            icon.classList.toggle('fas');
+            icon.classList.toggle('far');
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
 
             // Toggle retweet
             if (target.classList.contains('retweet-btn')) {

@@ -203,6 +203,22 @@ def home():
             JOIN users u ON t.user_id = u.id
             ORDER BY t.created_at DESC
         """, (user_id, user_id))
+        
+        cur.execute("""
+    SELECT 
+        t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64,
+        (SELECT COUNT(*) FROM likes l WHERE l.tweet_id = t.id) AS like_count,
+        (SELECT COUNT(*) FROM retweets r WHERE r.tweet_id = t.id) AS retweet_count,
+        (SELECT COUNT(*) FROM comments c WHERE c.tweet_id = t.id) AS comment_count,
+        (SELECT 1 FROM likes l WHERE l.tweet_id = t.id AND l.user_id = %s LIMIT 1) AS user_liked,
+        (SELECT 1 FROM retweets r WHERE r.tweet_id = t.id AND r.user_id = %s LIMIT 1) AS user_retweeted,
+        (SELECT 1 FROM bookmarks b WHERE b.tweet_id = t.id AND b.user_id = %s LIMIT 1) AS user_bookmarked
+    FROM tweets t
+    JOIN users u ON t.user_id = u.id
+    ORDER BY t.created_at DESC
+""", (user_id, user_id, user_id))
+
+        
         tweets = cur.fetchall()
 
         # Fetch comments for each tweet
@@ -855,6 +871,91 @@ def verify():
     cursor.close()
 
     return jsonify({"message": "User verified successfully"})
+@app.route('/bookmarks')
+def bookmarks():
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64,
+            (SELECT COUNT(*) FROM likes WHERE tweet_id = t.id),
+            (SELECT COUNT(*) FROM retweets WHERE tweet_id = t.id),
+            (SELECT COUNT(*) FROM comments WHERE tweet_id = t.id),
+            EXISTS(SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = %s),
+            EXISTS(SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = %s),
+            EXISTS(SELECT 1 FROM bookmarks WHERE tweet_id = t.id AND user_id = %s)
+        FROM bookmarks b
+        JOIN tweets t ON b.tweet_id = t.id
+        JOIN users u ON t.user_id = u.id
+        WHERE b.user_id = %s
+        ORDER BY b.created_at DESC
+    """, (user_id, user_id, user_id, user_id))
+    tweets = cur.fetchall()
+
+    tweet_comments = {}
+    for tweet in tweets:
+        tweet_id = tweet[0]
+        cur.execute("""
+            SELECT c.content, c.created_at, u.name, u.username, u.profile_pic_base64
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.tweet_id = %s
+            ORDER BY c.created_at DESC
+        """, (tweet_id,))
+        tweet_comments[tweet_id] = cur.fetchall()
+
+    unread_count = get_unread_notification_count(user_id)
+
+    cur.execute("SELECT name, username, email, profile_pic_base64 FROM users WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+    cur.close()
+
+    return render_template(
+        'home.html',
+        tweets=tweets,
+        tweet_comments=tweet_comments,
+        unread_count=unread_count,
+        name=user[0],
+        username=user[1],
+        email=user[2],
+        profile_pic_base64=user[3]
+    )
+
+
+@app.route('/bookmark/<int:tweet_id>', methods=['POST'])
+def bookmark(tweet_id):
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Please log in"}), 401
+
+    user_id = session['user_id']
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT IGNORE INTO bookmarks (user_id, tweet_id) VALUES (%s, %s)", (user_id, tweet_id))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/unbookmark/<int:tweet_id>', methods=['POST'])
+def unbookmark(tweet_id):
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Please log in"}), 401
+
+    user_id = session['user_id']
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("DELETE FROM bookmarks WHERE user_id = %s AND tweet_id = %s", (user_id, tweet_id))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 
 @app.route('/logout')
 def logout():
