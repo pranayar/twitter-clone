@@ -191,18 +191,18 @@ def home():
         user = cur.fetchone()
 
         # Fetch tweets with user info, counts, and user interaction states
-        cur.execute("""
-            SELECT 
-                t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64,
-                (SELECT COUNT(*) FROM likes l WHERE l.tweet_id = t.id) AS like_count,
-                (SELECT COUNT(*) FROM retweets r WHERE r.tweet_id = t.id) AS retweet_count,
-                (SELECT COUNT(*) FROM comments c WHERE c.tweet_id = t.id) AS comment_count,
-                (SELECT 1 FROM likes l WHERE l.tweet_id = t.id AND l.user_id = %s LIMIT 1) AS user_liked,
-                (SELECT 1 FROM retweets r WHERE r.tweet_id = t.id AND r.user_id = %s LIMIT 1) AS user_retweeted
-            FROM tweets t
-            JOIN users u ON t.user_id = u.id
-            ORDER BY t.created_at DESC
-        """, (user_id, user_id))
+        # cur.execute("""
+        #     SELECT 
+        #         t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64,
+        #         (SELECT COUNT(*) FROM likes l WHERE l.tweet_id = t.id) AS like_count,
+        #         (SELECT COUNT(*) FROM retweets r WHERE r.tweet_id = t.id) AS retweet_count,
+        #         (SELECT COUNT(*) FROM comments c WHERE c.tweet_id = t.id) AS comment_count,
+        #         (SELECT 1 FROM likes l WHERE l.tweet_id = t.id AND l.user_id = %s LIMIT 1) AS user_liked,
+        #         (SELECT 1 FROM retweets r WHERE r.tweet_id = t.id AND r.user_id = %s LIMIT 1) AS user_retweeted
+        #     FROM tweets t
+        #     JOIN users u ON t.user_id = u.id
+        #     ORDER BY t.created_at DESC
+        # """, (user_id, user_id))
         
         cur.execute("""
     SELECT 
