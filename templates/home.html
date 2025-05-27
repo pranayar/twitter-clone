@@ -203,7 +203,19 @@
         .action-btn:hover i.fa-bookmark {
             color: #ffad1f;
         }
-       
+       .search-box {
+    border: 2px solid #e6ecf0;
+    transition: box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+    border-color: #1da1f2;
+    box-shadow: 0 0 0 2px rgba(29, 161, 242, 0.2);
+}
+
+.search-box input::placeholder {
+    color: #536471;
+}
 
     </style>
 </head>
@@ -242,6 +254,26 @@
                     </div>
                 </form>
             </div>
+                {% if users %}
+<div class="p-4">
+    <h3 class="text-lg font-bold mb-2">Matched Results</h3>
+    {% for u in users %}
+    <a href="{{ url_for('profile', username=u[2]) }}" class="flex items-center mb-3 hover:bg-gray-100 p-2 rounded-lg">
+        {% if u[3] %}
+        <img src="data:image/jpeg;base64,{{ u[3] }}" class="w-10 h-10 rounded-full mr-3">
+        {% else %}
+        <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center">
+            <i class="fas fa-user text-gray-600"></i>
+        </div>
+        {% endif %}
+        <div>
+            <div class="font-semibold">{{ u[1] }}</div>
+            <div class="text-sm text-gray-500">@{{ u[2] }}</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
 
             <!-- Tweets -->
             <div id="tweets-container">
@@ -344,6 +376,15 @@
 
         <!-- Right Sidebar -->
         <div class="right-sidebar">
+            <form action="{{ url_for('search') }}" method="get" class="search-box bg-white rounded-full mb-4">
+    <div class="flex items-center p-3">
+        <i class="fas fa-search text-gray-500 mr-2"></i>
+        <input type="text" name="q" placeholder="Search"
+               class="w-full bg-transparent border-none outline-none text-sm"
+               required>
+    </div>
+</form>
+
             <div class="trends">
                 <h2 class="text-lg font-bold mb-3">Trends for you</h2>
                 <div class="trend-item">

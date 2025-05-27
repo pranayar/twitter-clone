@@ -996,6 +996,74 @@ def unbookmark(tweet_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+@app.route('/search')
+def search():
+    query = request.args.get('q', '').strip()
+    user_id = session.get('user_id')
+
+    if not user_id or not query:
+        return redirect(url_for('home'))
+
+    cur = mysql.connection.cursor()
+
+    # Search for users
+    cur.execute("""
+        SELECT id, name, username, profile_pic_base64 
+        FROM users 
+        WHERE (name LIKE %s OR username LIKE %s) AND isActive = 1
+        LIMIT 20
+    """, (f'%{query}%', f'%{query}%'))
+    users = cur.fetchall()
+
+    # Search for tweets
+    cur.execute("""
+        SELECT 
+            t.id, t.content, t.created_at, u.name, u.username, u.profile_pic_base64,
+            (SELECT COUNT(*) FROM likes WHERE tweet_id = t.id),
+            (SELECT COUNT(*) FROM retweets WHERE tweet_id = t.id),
+            (SELECT COUNT(*) FROM comments WHERE tweet_id = t.id),
+            EXISTS(SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = %s),
+            EXISTS(SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = %s),
+            EXISTS(SELECT 1 FROM bookmarks WHERE tweet_id = t.id AND user_id = %s)
+        FROM tweets t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.content LIKE %s
+        ORDER BY t.created_at DESC
+        LIMIT 50
+    """, (user_id, user_id, user_id, f'%{query}%'))
+    tweets = cur.fetchall()
+
+    # Fetch comments for each matching tweet
+    tweet_comments = {}
+    for tweet in tweets:
+        tweet_id = tweet[0]
+        cur.execute("""
+            SELECT c.content, c.created_at, u.name, u.username, u.profile_pic_base64
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.tweet_id = %s
+            ORDER BY c.created_at DESC
+        """, (tweet_id,))
+        tweet_comments[tweet_id] = cur.fetchall()
+
+    cur.execute("SELECT name, username, email, profile_pic_base64 FROM users WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+    unread_count = get_unread_notification_count(user_id)
+
+    cur.close()
+
+    return render_template(
+        'home.html',
+        query=query,
+        users=users,
+        tweets=tweets,
+        tweet_comments=tweet_comments,
+        name=user[0],
+        username=user[1],
+        email=user[2],
+        profile_pic_base64=user[3],
+        unread_count=unread_count
+    )
 
 
 @app.route('/logout')
