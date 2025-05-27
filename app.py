@@ -301,10 +301,34 @@ def tweet():
                         VALUES (%s, 'mention', %s, %s)
                     """, (mentioned_user_id, user_id, tweet_id))
                     
+        # Handle hashtags
+        hashtags = re.findall(r'#(\w+)', content)
+        if hashtags:
+            # Insert new hashtags into hashtags table (ignore duplicates)
+            for hashtag in hashtags:
+                cur.execute("""
+                    INSERT IGNORE INTO hashtags (hashtag)
+                    VALUES (%s)
+                """, (f"#{hashtag}",))
+            
             mysql.connection.commit()
+            
+            # Get hashtag IDs
+            format_strings = ','.join(['%s'] * len(hashtags))
+            cur.execute(f"SELECT id, hashtag FROM hashtags WHERE hashtag IN ({format_strings})", tuple(f"#{h}" for h in hashtags))
+            hashtag_rows = cur.fetchall()
+            
+            # Associate hashtags with the tweet
+            for hashtag_row in hashtag_rows:
+                hashtag_id = hashtag_row[0]
+                cur.execute("""
+                    INSERT INTO tweet_hashtags (tweet_id, hashtag_id)
+                    VALUES (%s, %s)
+                """, (tweet_id, hashtag_id))
         
+        mysql.connection.commit()
         cur.close()
-
+        
         flash("Tweet posted successfully!", "success")
         return redirect(url_for('home'))
 
@@ -729,6 +753,23 @@ def mention_suggestions():
     } for row in results]
 
     return jsonify(suggestions)
+
+@app.route('/hashtag-suggestions')
+def hashtag_suggestions():
+    query = request.args.get('q', '')
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT hashtag 
+        FROM hashtags 
+        WHERE hashtag LIKE %s 
+        LIMIT 10
+    """, ('#' + query + '%',))
+    results = cursor.fetchall()
+    cursor.close()
+
+    suggestions = [{'hashtag': row[0]} for row in results]
+    return jsonify(suggestions)
+
 
 @app.route('/notifications')
 def notifications():

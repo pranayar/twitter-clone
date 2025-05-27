@@ -200,6 +200,11 @@
         .danger {
             color: #e0245e;
         }
+        .action-btn:hover i.fa-bookmark {
+            color: #ffad1f;
+        }
+       
+
     </style>
 </head>
 <body>
@@ -361,6 +366,7 @@
     </div>
 
     <script>
+        
         // Character count for tweet textarea - updated with circle progress
         const textarea = document.querySelector('textarea[name="content"]');
         const charCount = document.getElementById('char-count');
@@ -523,37 +529,70 @@ if (target.classList.contains('bookmark-btn')) {
     </script>
     <script>
     const tribute = new Tribute({
-        trigger: "@",
-        values: async (text, cb) => {
-            const res = await fetch(`/mention-suggestions?q=${text}`);
-            const data = await res.json();
-            cb(data.map(user => ({
-                key: user.username,
-                value: user.username,
-                name: user.name,
-                pic: user.profile_pic_base64
-            })));
-        },
-        menuItemTemplate: function (item) {
-            const pic = item.original.pic
-                ? `<img src="data:image/jpeg;base64,${item.original.pic}" class="w-8 h-8 rounded-full mr-2">`
-                : `<div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center">
-                      <i class="fas fa-user text-sm text-gray-600"></i>
-                   </div>`;
-            return `
-                <div class="flex items-center p-2">
-                    ${pic}
-                    <div class="flex flex-col text-left">
-                        <span class="font-medium text-sm">${item.original.name}</span>
-                        <span class="text-xs text-gray-500">@${item.original.key}</span>
-                        <span class="text-xs text-blue-500">Following</span>
-                    </div>
-                </div>
-            `;
-        },
-        selectTemplate: function (item) {
-            return `@${item.original.key}`;
-        }
+        collection: [
+            {
+                // Mention configuration
+                trigger: '@',
+                values: async (text, cb) => {
+                    const res = await fetch(`/mention-suggestions?q=${text}`);
+                    const data = await res.json();
+                    cb(data.map(user => ({
+                        key: user.username,
+                        value: user.username,
+                        name: user.name,
+                        pic: user.profile_pic_base64
+                    })));
+                },
+                menuItemTemplate: function (item) {
+                    const pic = item.original.pic
+                        ? `<img src="data:image/jpeg;base64,${item.original.pic}" class="w-8 h-8 rounded-full mr-2">`
+                        : `<div class="w-8 h-8 bg-gray-300 rounded-full mr-2 flex items-center justify-center">
+                               <i class="fas fa-user text-sm text-gray-600"></i>
+                           </div>`;
+                    return `
+                        <div class="flex items-center p-2">
+                            ${pic}
+                            <div class="flex flex-col text-left">
+                                <span class="font-medium text-sm">${item.original.name}</span>
+                                <span class="text-xs text-gray-500">@${item.original.key}</span>
+                                
+                            </div>
+                        </div>
+                    `;
+                },
+                selectTemplate: function (item) {
+                    return `@${item.original.key}`;
+                }
+            },
+            {
+                // Hashtag configuration
+                trigger: '#',
+                values: async (text, cb) => {
+                    const res = await fetch(`/hashtag-suggestions?q=${text}`);
+                    const data = await res.json();
+                    cb(data.map(tag => ({
+                        key: tag.hashtag,
+                        value: tag.hashtag
+                    })));
+                },
+                menuItemTemplate: function (item) {
+                    return `
+                        <div class="flex items-center p-2">
+                            <div class="bg-blue-100 rounded-full p-1 mr-2">
+                                <i class="fas fa-hashtag text-blue-500 text-sm"></i>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="font-medium text-sm">${item.original.key}</span>
+                                <span class="text-xs text-gray-500">Trending</span>
+                            </div>
+                        </div>
+                    `;
+                },
+                selectTemplate: function (item) {
+                    return `${item.original.key}`;
+                }
+            }
+        ]
     });
 
     const tweetTextarea = document.querySelector('textarea[name="content"]');
