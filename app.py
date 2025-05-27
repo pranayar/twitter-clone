@@ -109,7 +109,7 @@ def check_identifier():
     cursor = mysql.connection.cursor()
     query = """
         SELECT 1 FROM users
-        WHERE phone = %s OR email = %s OR username = %s
+        WHERE (phone = %s OR email = %s OR username = %s) AND isActive = 1
         LIMIT 1;
     """
     cursor.execute(query, (identifier, identifier, identifier))
@@ -119,7 +119,7 @@ def check_identifier():
     if result:
         return jsonify({"message": "User already exists", "exists": True})
     else:
-        return jsonify({"message": "User not found", "exists": False})
+        return jsonify({"message": "User not found.", "exists": False})
 
 @app.route('/signin1', methods=['GET', 'POST'])
 def singIn1():
@@ -861,6 +861,24 @@ def logout():
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for('index'))
+
+
+@app.route('/deactivate-account', methods=['POST'])
+def deactivate_account():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "error": "User not logged in"}), 401
+    
+    try:
+        cursor = mysql.connection.cursor()
+        query = "UPDATE users SET isActive = 0 WHERE id = %s"
+        cursor.execute(query, (user_id,))
+        mysql.connection.commit()
+        cursor.close()
+        session.clear()
+        return jsonify({"success": True, "message": "Account has been deactivated."})
+    except Exception as e:
+        return jsonify({"success": False, "error": "Failed to deactivate account due to a server error."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
