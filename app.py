@@ -212,7 +212,7 @@ def home():
         (SELECT COUNT(*) FROM comments c WHERE c.tweet_id = t.id) AS comment_count,
         (SELECT 1 FROM likes l WHERE l.tweet_id = t.id AND l.user_id = %s LIMIT 1) AS user_liked,
         (SELECT 1 FROM retweets r WHERE r.tweet_id = t.id AND r.user_id = %s LIMIT 1) AS user_retweeted,
-        (SELECT 1 FROM bookmarks b WHERE b.tweet_id = t.id AND b.user_id = %s LIMIT 1) AS user_bookmarked
+        (SELECT 1 FROM bookmarks b WHERE b.tweet_id = t.id AND b.user_id = %s LIMIT 1) AS user_bookmarked,u.isverified
     FROM tweets t
     JOIN users u ON t.user_id = u.id
     ORDER BY t.created_at DESC
@@ -226,7 +226,7 @@ def home():
         for tweet in tweets:
             tweet_id = tweet[0]
             cur.execute("""
-                SELECT c.content, c.created_at, u.name, u.username, u.profile_pic_base64
+                SELECT c.content, c.created_at, u.name, u.username, u.profile_pic_base64,u.isverified
                 FROM comments c
                 JOIN users u ON c.user_id = u.id
                 WHERE c.tweet_id = %s

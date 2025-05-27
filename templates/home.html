@@ -293,7 +293,10 @@
                                 <div class="flex items-center">
                                   <a href="{{ url_for('profile', username=tweet[4]) }}" class="font-semibold text-sm mr-1 hover:underline">
     {{ tweet[3] }}
-</a>
+</a>{% if tweet[12] %}
+                                                    <span class="bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">✓</span>
+                                                        &nbsp;
+                                                {% endif %}
 <a href="{{ url_for('profile', username=tweet[4]) }}" class="text-gray-500 text-sm hover:underline">
     @{{ tweet[4] }}
 </a>
@@ -352,9 +355,14 @@
                                                         <i class="fas fa-user text-gray-600 text-sm"></i>
                                                     </div>
                                                 {% endif %}
+                                                
                                                 <div class="flex-1">
                                                     <div class="flex items-center">
                                                         <p class="font-semibold text-sm mr-1">{{ comment[2] }}</p>
+                                                        {% if comment[5] %}
+                                                    <span class="bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">✓</span>
+                                                        &nbsp;
+                                                {% endif %}
                                                         <p class="text-gray-500 text-sm">@{{ comment[3] }}</p>
                                                         <span class="text-gray-500 text-sm mx-1">·</span>
                                                         <p class="text-gray-500 text-sm">{{ comment[1].strftime('%b %d') }}</p>
@@ -560,6 +568,7 @@ if (target.classList.contains('bookmark-btn')) {
                     `;
                     commentsList.insertBefore(commentDiv, commentsList.firstChild);
                     form.reset();
+                    // location.reload();
                 } else {
                     alert(data.message);
                 }
